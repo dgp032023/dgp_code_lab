@@ -1,0 +1,91 @@
+pipeline {
+    agent any
+
+    environment {
+        // Update URLs as per your setup
+        SONARQUBE_URL = 'http://localhost:9000'
+        SONARQUBE_TOKEN = credentials('sonar-token')
+
+        NEXUS_URL = 'http://localhost:8081'
+        NEXUS_REPO = 'maven-snapshots'
+        NEXUS_CREDENTIALS = credentials('nexus-credentials')
+
+        TOMCAT_URL = 'http://localhost:9090'
+        TOMCAT_CREDENTIALS = credentials('tomcat-credentials')
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/dgp032023/course.git'
+            }
+        }
+
+        stage('Build with Maven') {
+            steps {
+                bat "mvn clean package -DskipTests"
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('sonar-server') {
+                    bat """
+                        mvn sonar:sonar ^
+                          -Dsonar.projectKey=Test1 ^
+                          -Dsonar.projectName=Test1 ^
+                          -Dsonar.projectVersion=1.0 ^
+                          -Dsonar.sources=src ^
+                          -Dsonar.java.binaries=target ^
+                          -Dsonar.host.url=${SONARQUBE_URL} ^
+                          -Dsonar.login=${SONARQUBE_TOKEN}
+                    """
+                }
+            }
+        }
+
+        stage('Upload Artifact to Nexus') {
+            steps {
+                nexusArtifactUploader(
+                    nexusVersion: 'nexus3',
+                    protocol: 'http',
+                    nexusUrl: 'localhost:8081',
+                    groupId: 'course',
+                    version: '1.0-SNAPSHOT',
+                    repository: "${NEXUS_REPO}",
+                    credentialsId: 'nexus-credentials',
+                    artifacts: [
+                        [artifactId: 'course',
+                         classifier: '',
+                         file: 'target/course.war',
+                         type: 'war']
+                    ]
+                )
+            }
+        }
+
+        stage('Deploy to Tomcat') {
+            steps {
+                deploy adapters: [
+                    tomcat9(
+                        credentialsId: 'tomcat-credentials',
+                        path: '/course',
+                        url: "${TOMCAT_URL}/manager/text"
+                    )
+                ],
+                contextPath: '/course',
+                war: 'target/course.war'
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ Build, Analysis, Upload, and Deployment Completed Successfully!'
+        }
+        failure {
+            echo '❌ Build Failed — Check console logs.'
+        }
+    }
+}
