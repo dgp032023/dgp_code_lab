@@ -42,9 +42,6 @@ pipeline {
                           -Dsonar.projectKey=mywebapp ^
                           -Dsonar.projectName=mywebapp ^
                           -Dsonar.sources=mywebapp/src ^
-                          -Dsonar.java.binaries=mywebapp/target ^
-                          -Dsonar.host.url=${SONARQUBE_URL} ^
-                          -Dsonar.login=${SONARQUBE_TOKEN}
                     '''
                 }
             }
@@ -96,6 +93,7 @@ pipeline {
         }
     }
 }
+
 
 
 
