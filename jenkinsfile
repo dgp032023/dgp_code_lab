@@ -41,7 +41,7 @@ pipeline {
                     mvn -f mywebapp/pom.xml sonar:sonar ^
                       -Dsonar.projectKey=Pipe1 ^
                       -Dsonar.projectName=Pipe1 ^
-                      -Dsonar.sources=mywebapp/src/main/webapp ^
+                      -Dsonar.sources=mywebapp/src ^
                       -Dsonar.java.binaries=mywebapp/target
                     '''
                 }
@@ -105,3 +105,4 @@ pipeline {
         }
     }
 }
+
