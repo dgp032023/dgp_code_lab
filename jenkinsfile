@@ -2,42 +2,45 @@ pipeline {
     agent any
 
     environment {
-        // Update URLs as per your setup
+        // External tool URLs and credentials
         SONARQUBE_URL = 'http://localhost:9000'
         SONARQUBE_TOKEN = credentials('sonar-token')
 
         NEXUS_URL = 'http://localhost:8081'
         NEXUS_REPO = 'maven-snapshots'
-        NEXUS_CREDENTIALS = credentials('nexus-credentials')
+        NEXUS_CREDENTIALS = credentials('nexus_cred')
 
         TOMCAT_URL = 'http://localhost:9090'
-        TOMCAT_CREDENTIALS = credentials('tomcat-credentials')
+        TOMCAT_CREDENTIALS = credentials('tomcat_cred')
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/dgp032023/course.git'
+                echo "Checking out code from GitHub..."
+                git branch: 'feature/EXE-10098',
+                    url: 'https://github.com/dgp032023/dgp_code_lab.git'
             }
         }
 
         stage('Build with Maven') {
             steps {
-                bat "mvn clean package -DskipTests"
+                echo "Running Maven clean and package..."
+                bat "mvn -f mywebapp/pom.xml clean package -DskipTests"
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
+                echo "Running SonarQube code analysis..."
                 withSonarQubeEnv('sonar-server') {
                     bat """
-                        mvn sonar:sonar ^
-                          -Dsonar.projectKey=Test1 ^
-                          -Dsonar.projectName=Test1 ^
+                        mvn -f mywebapp/pom.xml sonar:sonar ^
+                          -Dsonar.projectKey=Test3 ^
+                          -Dsonar.projectName=Test3 ^
                           -Dsonar.projectVersion=1.0 ^
-                          -Dsonar.sources=src ^
-                          -Dsonar.java.binaries=target ^
+                          -Dsonar.sources=mywebapp/src ^
+                          -Dsonar.java.binaries=mywebapp/target ^
                           -Dsonar.host.url=${SONARQUBE_URL} ^
                           -Dsonar.login=${SONARQUBE_TOKEN}
                     """
@@ -47,35 +50,37 @@ pipeline {
 
         stage('Upload Artifact to Nexus') {
             steps {
+                echo "Uploading WAR file to Nexus repository..."
                 nexusArtifactUploader(
                     nexusVersion: 'nexus3',
                     protocol: 'http',
                     nexusUrl: 'localhost:8081',
-                    groupId: 'course',
+                    groupId: 'com.example.webapp',
                     version: '1.0-SNAPSHOT',
                     repository: "${NEXUS_REPO}",
-                    credentialsId: 'nexus-credentials',
-                    artifacts: [
-                        [artifactId: 'course',
-                         classifier: '',
-                         file: 'target/course.war',
-                         type: 'war']
-                    ]
+                    credentialsId: 'nexus_cred',
+                    artifacts: [[
+                        artifactId: 'mywebapp',
+                        classifier: '',
+                        file: 'mywebapp/target/mywebapp.war',
+                        type: 'war'
+                    ]]
                 )
             }
         }
 
         stage('Deploy to Tomcat') {
             steps {
+                echo "Deploying WAR to Apache Tomcat..."
                 deploy adapters: [
                     tomcat9(
-                        credentialsId: 'tomcat-credentials',
-                        path: '/course',
+                        credentialsId: 'tomcat_cred',
+                        path: '/mywebapp',
                         url: "${TOMCAT_URL}/manager/text"
                     )
                 ],
-                contextPath: '/course',
-                war: 'target/course.war'
+                contextPath: '/mywebapp',
+                war: 'mywebapp/target/mywebapp.war'
             }
         }
     }
