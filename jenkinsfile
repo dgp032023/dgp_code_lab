@@ -1,50 +1,31 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven-3.9.11'
-    }
-
     environment {
-        SONARQUBE_URL = 'http://localhost:9000'
-        SONARQUBE_TOKEN = credentials('sonar-token')
         NEXUS_URL = 'http://localhost:8081'
         NEXUS_REPO = 'maven-snapshots'
         NEXUS_CREDENTIALS = credentials('nexus_cred')
         TOMCAT_URL = 'http://localhost:9090'
-        TOMCAT_CREDENTIALS = credentials('tomcat_cred')
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('SCM Checkout') {
             steps {
-                echo "📥 Checking out code from GitHub..."
-                git branch: 'feature/EXE-10098',
-                    url: 'https://github.com/dgp032023/dgp_code_lab.git'
+                git branch: 'feature/EXE-10098', url: 'https://github.com/dgp032023/dgp_code_lab.git'
             }
         }
 
-        stage('Build with Maven') {
+        stage('Build') {
             steps {
-                echo "🔧 Running Maven clean and package..."
-                withMaven(maven: 'Maven-3.9.11') {
-                    bat 'mvn -f mywebapp/pom.xml clean package -DskipTests'
-                }
+                bat 'mvn -f mywebapp/pom.xml clean package'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                echo "🔍 Running SonarQube code analysis..."
                 withSonarQubeEnv('sonar') {
-                    bat '''
-                        mvn -f mywebapp/pom.xml sonar:sonar ^
-                          -Dsonar.projectKey=Pipe1 ^
-                          -Dsonar.projectName=Pipe1 ^
-                          -Dsonar.sources=src/main/webapp ^
-                          -Dsonar.java.binaries=target
-                    '''
+                    bat 'mvn -f mywebapp/pom.xml sonar:sonar'
                 }
             }
         }
@@ -74,26 +55,19 @@ pipeline {
             steps {
                 echo "🚀 Deploying WAR to Apache Tomcat..."
                 script {
-                    deploy adapters: [
-                        tomcat9(
-                            credentialsId: 'tomcat_cred',
-                            path: '/mywebapp',
-                            url: "${TOMCAT_URL}/manager/text"
-                        )
-                    ],
-                    contextPath: '/mywebapp',
-                    war: 'mywebapp/target/mywebapp.war'
+                    deploy(
+                        adapters: [
+                            tomcat9(
+                                credentialsId: 'tomcat_cred',
+                                path: '',
+                                url: "${TOMCAT_URL}/manager/text"
+                            )
+                        ],
+                        contextPath: '/mywebapp',
+                        war: 'mywebapp/target/mywebapp.war'
+                    )
                 }
             }
-        }
-    }
-
-    post {
-        success {
-            echo '✅ Build, Analysis, Upload, and Deployment Completed Successfully!'
-        }
-        failure {
-            echo '❌ Build Failed — Check console logs.'
         }
     }
 }
