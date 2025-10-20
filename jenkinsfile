@@ -39,8 +39,8 @@ pipeline {
                 withSonarQubeEnv('sonar') {
                     bat '''
                         mvn -f mywebapp/pom.xml sonar:sonar ^
-                          -Dsonar.projectKey=mywebapp ^
-                          -Dsonar.projectName=mywebapp ^
+                          -Dsonar.projectKey=Pipe1 ^
+                          -Dsonar.projectName=Pipe1 ^
                           -Dsonar.sources=mywebapp/src ^
                     '''
                 }
@@ -93,6 +93,7 @@ pipeline {
         }
     }
 }
+
 
 
 
