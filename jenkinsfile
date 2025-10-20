@@ -6,14 +6,11 @@ pipeline {
     }
 
     environment {
-        // External tool URLs and credentials
         SONARQUBE_URL = 'http://localhost:9000'
         SONARQUBE_TOKEN = credentials('sonar-token')
-
         NEXUS_URL = 'http://localhost:8081'
         NEXUS_REPO = 'maven-snapshots'
         NEXUS_CREDENTIALS = credentials('nexus_cred')
-
         TOMCAT_URL = 'http://localhost:9090'
         TOMCAT_CREDENTIALS = credentials('tomcat_cred')
     }
@@ -42,10 +39,12 @@ pipeline {
                 withSonarQubeEnv('sonar-server') {
                     bat """
                         mvn -f mywebapp/pom.xml sonar:sonar ^
-                          -Dsonar.projectKey=Test3 ^
-                          -Dsonar.projectName=Test3 ^
-                          -Dsonar.projectVersion=1.0 ^
+                          -Dsonar.projectKey=mywebapp ^
+                          -Dsonar.projectName=mywebapp ^
                           -Dsonar.sources=mywebapp/src ^
+                          -Dsonar.java.binaries=mywebapp/target ^
+                          -Dsonar.host.url=${SONARQUBE_URL} ^
+                          -Dsonar.login=${SONARQUBE_TOKEN}
                     """
                 }
             }
@@ -57,7 +56,7 @@ pipeline {
                 nexusArtifactUploader(
                     nexusVersion: 'nexus3',
                     protocol: 'http',
-                    nexusUrl: "${NEXUS_URL.replace('http://','')}",
+                    nexusUrl: 'localhost:8081',
                     groupId: 'com.example.webapp',
                     version: '1.0-SNAPSHOT',
                     repository: "${NEXUS_REPO}",
@@ -97,4 +96,3 @@ pipeline {
         }
     }
 }
-
