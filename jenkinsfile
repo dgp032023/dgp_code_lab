@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        maven 'Maven-3.9.11'
+    }
+
     environment {
         // External tool URLs and credentials
         SONARQUBE_URL = 'http://localhost:9000'
@@ -17,7 +21,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                echo "Checking out code from GitHub..."
+                echo "📥 Checking out code from GitHub..."
                 git branch: 'feature/EXE-10098',
                     url: 'https://github.com/dgp032023/dgp_code_lab.git'
             }
@@ -25,14 +29,16 @@ pipeline {
 
         stage('Build with Maven') {
             steps {
-                echo "Running Maven clean and package..."
-                bat "mvn -f mywebapp/pom.xml clean package -DskipTests"
+                echo "🔧 Running Maven clean and package..."
+                withMaven(maven: 'Maven-3.9.11') {
+                    bat "mvn -f mywebapp/pom.xml clean package -DskipTests"
+                }
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
-                echo "Running SonarQube code analysis..."
+                echo "🔍 Running SonarQube code analysis..."
                 withSonarQubeEnv('sonar-server') {
                     bat """
                         mvn -f mywebapp/pom.xml sonar:sonar ^
@@ -50,11 +56,11 @@ pipeline {
 
         stage('Upload Artifact to Nexus') {
             steps {
-                echo "Uploading WAR file to Nexus repository..."
+                echo "📦 Uploading WAR file to Nexus repository..."
                 nexusArtifactUploader(
                     nexusVersion: 'nexus3',
                     protocol: 'http',
-                    nexusUrl: 'localhost:8081',
+                    nexusUrl: "${NEXUS_URL.replace('http://','')}",
                     groupId: 'com.example.webapp',
                     version: '1.0-SNAPSHOT',
                     repository: "${NEXUS_REPO}",
@@ -71,7 +77,7 @@ pipeline {
 
         stage('Deploy to Tomcat') {
             steps {
-                echo "Deploying WAR to Apache Tomcat..."
+                echo "🚀 Deploying WAR to Apache Tomcat..."
                 deploy adapters: [
                     tomcat9(
                         credentialsId: 'tomcat_cred',
