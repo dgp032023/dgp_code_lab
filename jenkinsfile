@@ -11,7 +11,8 @@ pipeline {
         NEXUS_URL = 'http://localhost:8081'
         NEXUS_REPO = 'maven-snapshots'
         NEXUS_CREDENTIALS = credentials('nexus_cred')
-        TOMCAT_HOME = 'C:\\Users\\vinay\\Downloads\\apache-tomcat-10.1.48\\apache-tomcat-10.1.48'
+        TOMCAT_URL = 'http://localhost:9090'
+        TOMCAT_CREDENTIALS = credentials('tomcat_cred')
     }
 
     stages {
@@ -28,7 +29,7 @@ pipeline {
             steps {
                 echo "🔧 Running Maven clean and package..."
                 withMaven(maven: 'Maven-3.9.11') {
-                    bat "mvn -f mywebapp/pom.xml clean package -DskipTests"
+                    bat 'mvn -f mywebapp/pom.xml clean package -DskipTests'
                 }
             }
         }
@@ -38,11 +39,11 @@ pipeline {
                 echo "🔍 Running SonarQube code analysis..."
                 withSonarQubeEnv('sonar') {
                     bat '''
-                    mvn -f mywebapp/pom.xml sonar:sonar ^
-                      -Dsonar.projectKey=Pipe1 ^
-                      -Dsonar.projectName=Pipe1 ^
-                      -Dsonar.sources=mywebapp/src ^
-                      -Dsonar.java.binaries=mywebapp/target
+                        mvn -f mywebapp/pom.xml sonar:sonar ^
+                          -Dsonar.projectKey=Pipe1 ^
+                          -Dsonar.projectName=Pipe1 ^
+                          -Dsonar.sources=src/main/webapp ^
+                          -Dsonar.java.binaries=target
                     '''
                 }
             }
@@ -54,7 +55,7 @@ pipeline {
                 nexusArtifactUploader(
                     nexusVersion: 'nexus3',
                     protocol: 'http',
-                    nexusUrl: 'localhost:8081',
+                    nexusUrl: "${NEXUS_URL.replace('http://', '')}",
                     groupId: 'com.example.webapp',
                     version: '1.0-SNAPSHOT',
                     repository: "${NEXUS_REPO}",
@@ -71,27 +72,16 @@ pipeline {
 
         stage('Deploy to Tomcat') {
             steps {
-                echo "🚀 Deploying WAR to Tomcat 10 by copying file..."
-
-                // Stop Tomcat before deploying
-                bat '''
-                echo 🧹 Stopping Tomcat...
-                call "%TOMCAT_HOME%\\bin\\shutdown.bat"
-                timeout /t 5 /nobreak
-                '''
-
-                // Copy the new WAR
-                bat '''
-                echo 📦 Copying new WAR to Tomcat webapps...
-                del "%TOMCAT_HOME%\\webapps\\mywebapp.war"
-                xcopy /Y "mywebapp\\target\\mywebapp.war" "%TOMCAT_HOME%\\webapps\\"
-                '''
-
-                // Start Tomcat again
-                bat '''
-                echo 🔥 Starting Tomcat...
-                call "%TOMCAT_HOME%\\bin\\startup.bat"
-                '''
+                echo "🚀 Deploying WAR to Apache Tomcat..."
+                deploy adapters: [
+                    tomcat9(
+                        credentialsId: 'tomcat_cred',
+                        path: '/mywebapp',
+                        url: "${TOMCAT_URL}/manager/text"
+                    )
+                ],
+                contextPath: '/mywebapp',
+                war: 'mywebapp/target/mywebapp.war'
             }
         }
     }
@@ -105,4 +95,3 @@ pipeline {
         }
     }
 }
-
