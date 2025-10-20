@@ -16,6 +16,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 echo "📥 Checking out code from GitHub..."
@@ -28,7 +29,7 @@ pipeline {
             steps {
                 echo "🔧 Running Maven clean and package..."
                 withMaven(maven: 'Maven-3.9.11') {
-                    bat "mvn -f mywebapp/pom.xml clean package -DskipTests"
+                    bat 'mvn -f mywebapp/pom.xml clean package -DskipTests'
                 }
             }
         }
@@ -41,7 +42,8 @@ pipeline {
                         mvn -f mywebapp/pom.xml sonar:sonar ^
                           -Dsonar.projectKey=Pipe1 ^
                           -Dsonar.projectName=Pipe1 ^
-                          -Dsonar.sources=mywebapp/src ^
+                          -Dsonar.sources=src/main/webapp ^
+                          -Dsonar.java.binaries=target
                     '''
                 }
             }
@@ -53,7 +55,7 @@ pipeline {
                 nexusArtifactUploader(
                     nexusVersion: 'nexus3',
                     protocol: 'http',
-                    nexusUrl: 'localhost:8081',
+                    nexusUrl: "${NEXUS_URL.replace('http://', '')}",
                     groupId: 'com.example.webapp',
                     version: '1.0-SNAPSHOT',
                     repository: "${NEXUS_REPO}",
@@ -93,8 +95,3 @@ pipeline {
         }
     }
 }
-
-
-
-
-
