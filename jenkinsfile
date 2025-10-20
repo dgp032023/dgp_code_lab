@@ -36,7 +36,7 @@ pipeline {
         stage('SonarQube Analysis') {
             steps {
                 echo "🔍 Running SonarQube code analysis..."
-                withSonarQubeEnv('sonar-token') {
+                withSonarQubeEnv('sonar') {
                     bat """
                         mvn -f mywebapp/pom.xml sonar:sonar ^
                           -Dsonar.projectKey=mywebapp ^
@@ -96,4 +96,5 @@ pipeline {
         }
     }
 }
+
 
