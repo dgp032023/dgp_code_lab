@@ -9,10 +9,10 @@
       margin: 0;
       padding: 0;
       overflow: hidden;
-      background: linear-gradient(to top, #87CEEB, #E0F7FA); /* sky color */
+      background: linear-gradient(to top, #aee1f9, #e0f7fa);
       height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
       position: relative;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     /* Clouds */
@@ -24,41 +24,16 @@
       animation: moveClouds 60s linear infinite;
     }
 
-    .cloud:before, .cloud:after {
-      content: '';
-      position: absolute;
-      background: white;
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-    }
-
-    .cloud1 { width: 100px; height: 60px; top: 50px; left: -150px; animation-delay: 0s; }
-    .cloud2 { width: 150px; height: 80px; top: 120px; left: -200px; animation-delay: 10s; }
-    .cloud3 { width: 120px; height: 70px; top: 200px; left: -180px; animation-delay: 20s; }
+    .cloud1 { width: 120px; height: 60px; top: 50px; left: -200px; animation-delay: 0s; }
+    .cloud2 { width: 180px; height: 90px; top: 130px; left: -250px; animation-delay: 10s; }
+    .cloud3 { width: 150px; height: 70px; top: 200px; left: -300px; animation-delay: 20s; }
 
     @keyframes moveClouds {
-      from { left: -200px; }
-      to { left: 100%; }
+      from { left: -250px; }
+      to { left: 110%; }
     }
 
-    /* Horses animation */
-    .horse {
-      position: absolute;
-      bottom: 50px;
-      width: 200px;
-      animation: runHorses 10s linear infinite;
-    }
-
-    .horse:nth-child(4) { left: -300px; animation-delay: 0s; }
-    .horse:nth-child(5) { left: -500px; animation-delay: 2s; }
-    .horse:nth-child(6) { left: -700px; animation-delay: 4s; }
-
-    @keyframes runHorses {
-      from { left: -300px; }
-      to { left: 100%; }
-    }
-
+    /* Hello World text */
     h2 {
       position: absolute;
       top: 30%;
@@ -66,22 +41,37 @@
       text-align: center;
       font-size: 48px;
       color: #2E3A59;
-      text-shadow: 2px 2px 6px #ffffff;
+      text-shadow: 2px 2px 8px #ffffff;
+    }
+
+    /* Horses */
+    .horse {
+      position: absolute;
+      bottom: 40px;
+      width: 180px;
+      animation: runHorses 10s linear infinite;
+    }
+
+    .horse:nth-of-type(4) { left: -250px; animation-delay: 0s; }
+    .horse:nth-of-type(5) { left: -450px; animation-delay: 2s; bottom: 70px; }
+    .horse:nth-of-type(6) { left: -650px; animation-delay: 4s; bottom: 100px; }
+
+    @keyframes runHorses {
+      from { left: -300px; }
+      to { left: 110%; }
     }
   </style>
 </head>
 <body>
-  <!-- Clouds -->
   <div class="cloud cloud1"></div>
   <div class="cloud cloud2"></div>
   <div class="cloud cloud3"></div>
 
-  <!-- Hello World -->
   <h2>Hello World!</h2>
 
-  <!-- Horses -->
-  <img src="https://i.imgur.com/N9K7vWQ.gif" alt="Running Horses" class="horse">
-  <img src="https://i.imgur.com/N9K7vWQ.gif" alt="Running Horses" class="horse">
-  <img src="https://i.imgur.com/N9K7vWQ.gif" alt="Running Horses" class="horse">
+  <!-- Working horse GIFs -->
+  <img src="https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif" alt="Running Horse" class="horse">
+  <img src="https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif" alt="Running Horse" class="horse">
+  <img src="https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif" alt="Running Horse" class="horse">
 </body>
 </html>
