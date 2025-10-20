@@ -3,7 +3,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Hello World with Running Horses</title>
+  <title>Hello World with Horses</title>
   <style>
     body {
       margin: 0;
@@ -33,7 +33,7 @@
       to { left: 110%; }
     }
 
-    /* Hello World text */
+    /* Text */
     h2 {
       position: absolute;
       top: 30%;
@@ -57,21 +57,23 @@
     .horse:nth-of-type(6) { left: -650px; animation-delay: 4s; bottom: 100px; }
 
     @keyframes runHorses {
-      from { left: -300px; }
-      to { left: 110%; }
+      from { left: -300px; transform: scaleX(1); }
+      to { left: 110%; transform: scaleX(1); }
     }
   </style>
 </head>
 <body>
+  <!-- Clouds -->
   <div class="cloud cloud1"></div>
   <div class="cloud cloud2"></div>
   <div class="cloud cloud3"></div>
 
+  <!-- Hello World Text -->
   <h2>Hello World!</h2>
 
-  <!-- Working horse GIFs -->
-  <img src="https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif" alt="Running Horse" class="horse">
-  <img src="https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif" alt="Running Horse" class="horse">
-  <img src="https://media.giphy.com/media/26BRuo6sLetdllPAQ/giphy.gif" alt="Running Horse" class="horse">
+  <!-- Horses using your image -->
+  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUAxNiJrBYHE_dSh5d6iELEgy10evfmULy6w&s" alt="Running Horse" class="horse">
+  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUAxNiJrBYHE_dSh5d6iELEgy10evfmULy6w&s" alt="Running Horse" class="horse">
+  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSUAxNiJrBYHE_dSh5d6iELEgy10evfmULy6w&s" alt="Running Horse" class="horse">
 </body>
 </html>
