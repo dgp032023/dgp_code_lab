@@ -73,15 +73,17 @@ pipeline {
         stage('Deploy to Tomcat') {
             steps {
                 echo "🚀 Deploying WAR to Apache Tomcat..."
-                deploy adapters: [
-                    tomcat9(
-                        credentialsId: 'tomcat_cred',
-                        path: '/mywebapp',
-                        url: "${TOMCAT_URL}/manager/text"
-                    )
-                ],
-                contextPath: '/mywebapp',
-                war: 'mywebapp/target/mywebapp.war'
+                script {
+                    deploy adapters: [
+                        tomcat9(
+                            credentialsId: 'tomcat_cred',
+                            path: '/mywebapp',
+                            url: "${TOMCAT_URL}/manager/text"
+                        )
+                    ],
+                    contextPath: '/mywebapp',
+                    war: 'mywebapp/target/mywebapp.war'
+                }
             }
         }
     }
