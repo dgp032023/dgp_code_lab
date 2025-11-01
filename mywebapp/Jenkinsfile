@@ -18,15 +18,13 @@ pipeline {
 
         stage('Build WAR') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                bat 'mvn clean package -DskipTests'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                  docker build -t $ECR_REPO:$IMAGE_TAG .
-                '''
+                bat "docker build -t %ECR_REPO%:%IMAGE_TAG% ."
             }
         }
 
@@ -36,9 +34,9 @@ pipeline {
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws_credentials'
                 ]]) {
-                    sh '''
-                      aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
-                      docker push $ECR_REPO:$IMAGE_TAG
+                    bat '''
+                      aws ecr get-login-password --region %AWS_REGION% | docker login --username AWS --password-stdin %ECR_REPO%
+                      docker push %ECR_REPO%:%IMAGE_TAG%
                     '''
                 }
             }
@@ -50,12 +48,12 @@ pipeline {
                     $class: 'AmazonWebServicesCredentialsBinding',
                     credentialsId: 'aws_credentials'
                 ]]) {
-                    sh '''
-                      aws eks update-kubeconfig --region $AWS_REGION --name my-eks-cluster
-                      kubectl apply -f k8s-manifests/namespace.yaml || true
-                      kubectl apply -f k8s-manifests/deployment.yaml -n $KUBE_NAMESPACE
-                      kubectl apply -f k8s-manifests/service.yaml -n $KUBE_NAMESPACE
-                      kubectl rollout status deployment/mywebapp -n $KUBE_NAMESPACE
+                    bat '''
+                      aws eks update-kubeconfig --region %AWS_REGION% --name my-eks-cluster
+                      kubectl apply -f k8s-manifests\\namespace.yaml || exit 0
+                      kubectl apply -f k8s-manifests\\deployment.yaml -n %KUBE_NAMESPACE%
+                      kubectl apply -f k8s-manifests\\service.yaml -n %KUBE_NAMESPACE%
+                      kubectl rollout status deployment/mywebapp -n %KUBE_NAMESPACE%
                     '''
                 }
             }
