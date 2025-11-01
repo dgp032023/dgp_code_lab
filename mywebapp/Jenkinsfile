@@ -6,7 +6,7 @@ pipeline {
         ECR_REPO = '957478052660.dkr.ecr.us-east-1.amazonaws.com/mywebapp'
         IMAGE_TAG = "latest"
         KUBE_NAMESPACE = 'mywebapp-ns'
-        AWS_CRED = credentials('aws_creds')
+        AWS_CRED = credentials('aws_cred')
     }
 
     stages {
@@ -36,7 +36,7 @@ pipeline {
 
         stage('Login & Push to ECR') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'aws_creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                withCredentials([usernamePassword(credentialsId: 'aws_cred', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
                     sh '''
                       aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
                       aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
