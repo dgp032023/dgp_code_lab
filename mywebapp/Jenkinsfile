@@ -2,14 +2,14 @@ pipeline {
     agent any
 
     environment {
-        AWS_REGION     = 'us-east-1'
-        ECR_REPO       = '957478052660.dkr.ecr.us-east-1.amazonaws.com/mywebapp'
-        IMAGE_TAG      = "latest"
+        AWS_REGION = 'us-east-1'
+        ECR_REPO = '957478052660.dkr.ecr.us-east-1.amazonaws.com/mywebapp'
+        IMAGE_TAG = "latest"
         KUBE_NAMESPACE = 'mywebapp-ns'
+        AWS_CRED = credentials('aws_credentials')
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
@@ -18,25 +18,31 @@ pipeline {
 
         stage('Build WAR') {
             steps {
-                bat 'mvn clean package -DskipTests'
+                dir('mywebapp') {
+                    sh 'mvn clean package -DskipTests'
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                bat "docker build -t %ECR_REPO%:%IMAGE_TAG% ."
+                dir('mywebapp') {
+                    sh '''
+                      docker build -t $ECR_REPO:$IMAGE_TAG .
+                    '''
+                }
             }
         }
 
         stage('Login & Push to ECR') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws_credentials'
-                ]]) {
-                    bat '''
-                      aws ecr get-login-password --region %AWS_REGION% | docker login --username AWS --password-stdin %ECR_REPO%
-                      docker push %ECR_REPO%:%IMAGE_TAG%
+                withCredentials([usernamePassword(credentialsId: 'aws_creds', usernameVariable: 'AWS_ACCESS_KEY_ID', passwordVariable: 'AWS_SECRET_ACCESS_KEY')]) {
+                    sh '''
+                      aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+                      aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+                      aws configure set default.region $AWS_REGION
+                      aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPO
+                      docker push $ECR_REPO:$IMAGE_TAG
                     '''
                 }
             }
@@ -44,18 +50,13 @@ pipeline {
 
         stage('Deploy to EKS') {
             steps {
-                withCredentials([[
-                    $class: 'AmazonWebServicesCredentialsBinding',
-                    credentialsId: 'aws_credentials'
-                ]]) {
-                    bat '''
-                      aws eks update-kubeconfig --region %AWS_REGION% --name my-eks-cluster
-                      kubectl apply -f k8s-manifests\\namespace.yaml || exit 0
-                      kubectl apply -f k8s-manifests\\deployment.yaml -n %KUBE_NAMESPACE%
-                      kubectl apply -f k8s-manifests\\service.yaml -n %KUBE_NAMESPACE%
-                      kubectl rollout status deployment/mywebapp -n %KUBE_NAMESPACE%
-                    '''
-                }
+                sh '''
+                  aws eks update-kubeconfig --region $AWS_REGION --name my-eks-cluster
+                  kubectl apply -f mywebapp/k8s-manifests/namespace.yaml || true
+                  kubectl apply -f mywebapp/k8s-manifests/deployment.yaml -n $KUBE_NAMESPACE
+                  kubectl apply -f mywebapp/k8s-manifests/service.yaml -n $KUBE_NAMESPACE
+                  kubectl rollout status deployment/mywebapp -n $KUBE_NAMESPACE
+                '''
             }
         }
     }
